@@ -12,7 +12,7 @@ register_tortoise(
     db_url="sqlite://game.db",
     add_exception_handlers=True,
     generate_schemas=True,
-    modules={"models": ["api.models.session", "api.models.player"]}
+    modules={"models": ["api.models.session", "api.models.player", "api.models"]}
 )
 
 @app.get("/")

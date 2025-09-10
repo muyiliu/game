@@ -14,6 +14,7 @@ class PostPlayer(BaseModel):
     playing : bool
     score : int
 
+
 class PutPlayer(BaseModel):
     name : str
     playing : bool
