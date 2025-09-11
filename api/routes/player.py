@@ -1,7 +1,10 @@
+from sqlite3 import IntegrityError
 from fastapi import APIRouter, HTTPException,status
 from api.models.player import Player
 
+from api.models.session import Session
 from api.schemas.player import GetPlayer, PostPlayer, PutPlayer
+from api.schemas.session import GetSession
 
 player_router = APIRouter(prefix="/api", tags=["player"])
 
@@ -13,9 +16,17 @@ async def all_player():
 
 @player_router.post("/player")
 async def post_player(player: PostPlayer):
-    row = await Player.create(**player.model_dump())
-    
-    return await GetPlayer.from_tortoise_orm(row)
+    # session = await Session.get(session_id=player.session_id)
+    # use player.session_id to get session, and check session's player number
+    players = await Player.filter(session__session_id=player.session_id)
+    print("In the players file, here are player length", len(players))
+    try:
+        data = await Player.create(**player.model_dump())
+
+        return await GetPlayer.from_tortoise_orm(data)
+    except IntegrityError:
+        data = await Player.get(player_id=player.player_id)
+        return await GetPlayer.from_tortoise_orm(data)
 
 @player_router.put("/player/{player_id}")
 async def update_player(player_id: int, body: PutPlayer):
