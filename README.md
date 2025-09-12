@@ -18,6 +18,21 @@ Moreover, if you would like to fetch through localhost, can you do:
 
 ## Flow
 
+The flow of work of creating sessions and players should be:
+1. when players enter the game, the game should create a session for them
+2. players are able to enter the game by selecting session, if more than two players selected one session, the 
+session will deny 3rd player to enter the game
+3. once the game has start, players can player place their id on the board
+4. the one who won in the end, will incremenet 1 in the score, and in the meanwhile record their total steps for winning
+5. the one lost, the score won't change, but will add the steps, so we can get frequency
+6. If game is draw, record the steps only
+7. in the end, get top 3 player with highest score, and another 3 based on frequency.
+
+- we can have multiple session and players to play games at the same time, if one of sessions has end,
+delete the session
+- top 3 players will only show when there is draw or winner 
+data model discussion
+
 
 ## Data Model
 ## Thought Process
