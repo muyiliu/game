@@ -2,7 +2,8 @@ from tortoise import Model
 from tortoise.fields import IntField, CharField, ForeignKeyRelation, CASCADE, ForeignKeyField
 
 from api.models.session import Session
-    
+
+# set session as ForeignKeyRelation
 class Player(Model):
     player_id = IntField(pk=True)
     name = CharField(max_length=255)

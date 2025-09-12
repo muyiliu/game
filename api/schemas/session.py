@@ -14,22 +14,17 @@ BoardRow = Annotated[list[int], Field(min_length=3, max_length=3)]
 # Board must be exactly 3 rows
 BoardType = Annotated[list[BoardRow], Field(min_length=3, max_length=3)]
 
-# Here valid that the player list only contains two players, one player can enter for
-PlayerList = Annotated[list[PostPlayer], Field(min_length=1, max_length=2)]
-
 class PostSession(BaseModel):
     session_id: int
     board: BoardType
     active:bool
 
-
 class PutSession(BaseModel):
     board: Optional[BoardType]=None
-    players: Optional[PlayerList]=None
+    players: Optional[list[PostPlayer]]=None
     active: bool
 
 class Move(BaseModel):
     player_id:int
     row: int
     col: int
-    # steps: int # to cacluate: Efficiency = average number of moves per win (lower is better)-> score//steps 

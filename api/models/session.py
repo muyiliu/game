@@ -6,6 +6,7 @@ from tortoise.fields import IntField, BooleanField, CharField, JSONField, Revers
 
 if TYPE_CHECKING:
     from api.models.player import Player
+
 def default_board():
     return [[0, 0, 0] for _ in range(3)]
 

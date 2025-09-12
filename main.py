@@ -15,7 +15,7 @@ app.include_router(session_router)
 app.include_router(player_router)
 
 DATABASE_URL = "sqlite://game.db"
-MODELS = {"models": ["api.models.session", "api.models.player", "api.models"]}
+MODELS = {"models": ["api.models.session", "api.models.player"]}
 
 register_tortoise(
     app=app,
@@ -39,24 +39,9 @@ async def init_db_headless():
 async def close_db_headless():
     await Tortoise.close_connections()
 
-'''
-The flow of work of creating sessions and players should be:
-1. when players enter the game, the game should create a session for them
-2. players are able to enter the game by selecting session, if more than two players selected one session, the 
-session will deny 3rd player to enter the game
-3. once the game has start, players can player place their id on the board
-4. the one who won in the end, will incremenet 1 in the score, and in the meanwhile record their total steps for winning
-5. the one lost, the score won't change, but will add the steps, so we can get frequency
-6. If game is draw, record the steps only
-7. in the end, get top 3 player with highest score, and another 3 based on frequency.
 
-- we can have multiple session and players to play games at the same time, if one of sessions has end,
-delete the session
-- top 3 players will only show when there is draw or winner 
-data model discussion
-'''
 # In this example, I'll create session id from 1-10, player_id from 20-30 for better reading
-# Play 4 games with 8 players, so we sure can have top 3 players
+# Play 4 games with 8 players, so we sure can have top 3 players in the end
 async def create_session_players():
 
     await init_db_headless()
@@ -98,13 +83,13 @@ async def create_session_players():
     await post_player(p7)
     await post_player(p8)
     await update_session(session4.session_id)
-
+    print(f"4 sessions and 8 players have been created, also assign players to the each session")
     await close_db_headless()
 
 
 async def start_game1():
     await init_db_headless()
-
+    print("------------------------------------------------Session 1 Started--------------------------------------------------")
     session = await Session.get(session_id=1)
     p1 = await Player.get(player_id=20)
     p2 = await Player.get(player_id=21)
@@ -120,11 +105,14 @@ async def start_game1():
     print(f"Move 4 for {session.session_id}, and outcome is, {await make_move(session.session_id, move4)}")
     move5 = Move(player_id=p1.player_id, row=2, col=1)
     print(f"Move 5 for {session.session_id}, and outcome is {await make_move(session.session_id, move5)}")
-    
+
+    print("------------------------------------------------Session 1 Ended--------------------------------------------------")
     await close_db_headless()
+    
 
 async def start_game2():
     await init_db_headless()
+    print("------------------------------------------------Session 2 Started--------------------------------------------------")
 
     session = await Session.get(session_id=2)
     p1 = await Player.get(player_id=22)
@@ -144,10 +132,13 @@ async def start_game2():
     move6 = Move(player_id=p2.player_id, row=2, col=2)
     print(f"Move 6 for {session.session_id}, and outcome is {await make_move(session.session_id, move6)}")
     
+    print("------------------------------------------------Session 2 Started--------------------------------------------------")
     await close_db_headless()
 
 async def start_game3():
     await init_db_headless()
+
+    print("------------------------------------------------Session 3 Started--------------------------------------------------")
 
     session = await Session.get(session_id=3)
     p1 = await Player.get(player_id=24)
@@ -181,10 +172,13 @@ async def start_game3():
     move9 = Move(player_id=p1.player_id, row=2, col=2)
     print(f"Move 9 for {session.session_id}, and outcome is {await make_move(session.session_id, move9)}")
     
+    print("------------------------------------------------Session 3 Ended--------------------------------------------------")
     await close_db_headless()
 
 async def start_game4():
     await init_db_headless()
+
+    print("------------------------------------------------Session 4 Started--------------------------------------------------")
 
     session = await Session.get(session_id=4)
     p1 = await Player.get(player_id=26)
@@ -202,27 +196,19 @@ async def start_game4():
     move5 = Move(player_id=p1.player_id, row=0, col=2)
     print(f"Move 5 for {session.session_id}, and outcome is {await make_move(session.session_id, move5)}")
 
+    print("------------------------------------------------Session 4 End--------------------------------------------------")
     await close_db_headless()
 
-# #     uvicorn.run("main:app", reload=True) # uvicorn main:app --reload
-# # http://127.0.0.1:8000/api/session -> []
-# # http://127.0.0.1:8000/api/player -> {player: in progress}
-
-# ---- Entry point ----
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run script serve API.")
     parser.add_argument("--create", action="store_true", help="Start creating sessions and players")
     parser.add_argument("--script", action="store_true", help="start and simulate a game, judge and print result.")
-
     args = parser.parse_args()
     
-    # if args.create:
-    #      asyncio.run(create_session_players()) # python3 main.py --create
-    if args.script: # python3 main.py --script 
-
-        # asyncio.run(start_game1())
-        # asyncio.run(start_game2())
-        # asyncio.run(start_game3())
-        asyncio.run(start_game4())
-    else:
+    if args.create: # python3 main.py --create
         asyncio.run(create_session_players())
+    elif args.script: # python3 main.py --script
+        asyncio.run(start_game1())
+        asyncio.run(start_game2())
+        asyncio.run(start_game3())
+        asyncio.run(start_game4())

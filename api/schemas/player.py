@@ -17,3 +17,5 @@ class PutPlayer(BaseModel):
     score : int
     steps: int
     session_id: int
+
+# steps: cacluate Efficiency = average number of moves per win (lower is better)-> score//steps 

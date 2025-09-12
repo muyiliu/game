@@ -17,7 +17,7 @@ async def all_session():
 async def post_session(session: PostSession):
     exists = await Session.filter(session_id=session.session_id).exists()
     if exists:
-        raise ValueError(f" {session.session_id} already exist")
+        raise ValueError(f"{session.session_id} already exist")
     data = await Session.create(**session.model_dump())
     return await GetSession.from_tortoise_orm(data)
     
@@ -25,35 +25,34 @@ async def post_session(session: PostSession):
 @session_router.put("/session/{session_id}")
 async def update_session(session_id: int, body:Optional[PutSession] = None):
 
-    exists = await Session.filter(session_id=session_id).exists()
+    session = await Session.get(session_id=session_id)
 
-    if not exists:
+    if not session:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Session Not Found")
 
-    players = await Player.filter(session__session_id=session_id).values("player_id", "name")
+    players = await Player.filter(session__session_id=session_id).values()
+
+    # Double check to be make sure that the session only has two players
     if len(players) > 2:
-        raise ValueError("The session alreayd full with 2 players")
+        raise ValueError(f"The session alreayd full with 2 players")
     
     if body:
-        if body.players: # TODO: If players are changed, I need to update
-            session_instance = await Session.get(session_id=session_id)
-            # It will only allow two players, since I've set up in the schemas, but I'll add extra condition to make sure
+        # update the session first, and then update each player 
+        await session.update_from_dict({"board":body.board, "active":body.active}).save()
+        if body.players: 
             for player_data in body.players:
                 # Check if a player with this ID already exists
-                # player_exists = await Player.filter(player_id=player_data.player_id).exists()
+                player_exists = await Player.filter(player_id=player_data.player_id).exists()
 
-                if not player_data:
-                    raise HTTPException(
-                        status.HTTP_404_NOT_FOUND, 
-                        detail=f"Player with ID {player_data.player_id} not found."
-                    )
+                if not player_exists:
+                    raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"Player with ID {player_data.player_id} not found.")
                     
                 # If the player exists, update their details
-                player_instance = await Player.get(player_id=player_data.player_id)
-                player_instance.session = session_instance
-                    
-                await player_instance.update_from_dict(player_data.model_dump(exclude_unset=True)).save()
-
+                player = await Player.get(player_id=player_data.player_id)
+                player.session = session
+                
+                await player.update_from_dict(player_data.model_dump(exclude_unset=True)).save()
+    
     # Fetch and return the updated session with all its relationships loaded
     updated_session = await GetSession.from_queryset_single(Session.get(session_id=session_id).prefetch_related('players'))
     return updated_session
@@ -62,54 +61,55 @@ async def update_session(session_id: int, body:Optional[PutSession] = None):
 @session_router.put("/session/{session_id}/move")
 async def make_move(session_id: int, body: Move):
     session = await Session.get_or_none(session_id=session_id)
-    if session:
-        players = await Player.filter(session__session_id=session_id).values("player_id", "name")
-        if len(players) > 2:
-            raise ValueError("There are more than two players, you can't player the game")
+
     if not session:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="The session NOT been found")
     
-    # TODO: if session active=False, you have to update the session, let it to be active, but you can't directly update here
+    if not session.active:
+        raise ValueError(f"{session_id} is not active, please active session first")
+        
     board = session.board
 
     if board[body.row][body.col] == 0:
         board[body.row][body.col] = body.player_id
         
     else:
-        raise ValueError("The position has been taken")
+        raise ValueError(f"The position has been taken")
 
-    # player will make a move, so add 1 step at beignning 
+    # the current player will make a move, so add 1 step at beignning 
+    # also update the board 
+    # for this part, let the client side to handle swap the players will make have better handling
     player = await Player.get(player_id=body.player_id)
     player.steps += 1
-    await player.update_from_dict({"steps": player.steps}).save()
+    await player.update_from_dict({"steps": player.steps, "board": board}).save()
 
     winner = check_winner(board)
     if winner:
         player.score += 1
-        await player.update_from_dict({"score":player.score}).save()
+        await player.update_from_dict({"score":player.score, "active": False}).save()
         top_three_players_score = await top_three_player_score()
         top_three_players_freq = await top_three_player_freq()
         return {"winner ": player.name, 
                 "board ": board, 
+                session_id : " has been inactive",
                 "Top 3 players based on score ": top_three_players_score,
                 "Top 3 players based on freq": top_three_players_freq
                 }
-    else:
-        draw = is_draw(board)
     
+    draw = is_draw(board)
     if draw:
         session_id = session.session_id
-        await session.update_from_dict({"board": board, "session_id": False}).save()
+        await session.update_from_dict({"board": board, "active": False}).save()
         top_three_players_score = await top_three_player_score()
         top_three_players_freq = await top_three_player_freq()
-        return {"The session has been drawn" : {board}, 
+        return {"The session has been drawn" : board, 
                 session_id : " has been inactived",
                 "Top 3 players based on score ": top_three_players_score,
                 "Top 3 players based on freq": top_three_players_freq
                 }
     
     await session.update_from_dict({"board": board}).save()
-    return {"The game is on going " : board}
+    return {"The game is ongoing, current board: " : board}
 
 
 def is_draw(board):
@@ -130,7 +130,7 @@ def check_winner(board):
     
     return None
 
-# the score is larger the better, so I use max heap to find top 3 players
+# the score is larger the better, so I use max heap to find top 3 players, excluded players with score == 0
 async def top_three_player_score():
     players = await Player.all().values("player_id", "name", "score")
     heap = []
@@ -145,11 +145,11 @@ async def top_three_player_score():
     
     for _ in range(3):
         score, player_id, name = heapq.heappop(heap)
-        result.append([name, -score]) # score, player_id
+        result.append([name, -score]) # name, score
     
     return result
 
-# base on the description, the lower the better, so I use min heap to find the top 3 players
+# base on the description, the lower the better, so I use min heap to find the top 3 players, excluded players with score == 0
 async def top_three_player_freq(): 
     players = await Player.all().values("player_id", "name", "score", "steps")
     heap = []
@@ -157,14 +157,14 @@ async def top_three_player_freq():
     result = []
     for player in players:
         if player["score"] != 0:
-            heapq.heappush(heap, ((player["score"]/player["steps"]), player["player_id"], player["name"]))
+            heapq.heappush(heap, ((player["steps"]/player["score"]), player["player_id"], player["name"])) # how many steps can win 1 score. Lower the better
     
     if len(heap) < 3:
         return result
     
     for _ in range(3):
         freq, player_id, name = heapq.heappop(heap)
-        result.append([name, round(freq, 2)]) # freq, player_id
+        result.append([name, round(freq, 2)]) # rounded freq into 2 digits for client to present 
         
     return result
     

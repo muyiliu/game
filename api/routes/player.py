@@ -13,12 +13,12 @@ async def all_player():
 
 @player_router.post("/player")
 async def post_player(player: PostPlayer):
-    # session = await Session.get(session_id=player.session_id)
-    # use player.session_id to get session, and check session's player number
     exists = await Player.filter(player_id=player.player_id).exists()
     if exists:
         raise HTTPException(status.HTTP_409_CONFLICT, detail="Player already existed")
     
+    # use player.session_id to get session, and check each sessions' players number
+    # this should be checked at client side
     players = await Player.filter(session__session_id=player.session_id)
     if len(players) > 2:
         raise HTTPException(status.HTTP_406_NOT_ACCEPTABLE, detail=" The session is full, choose another one") 
@@ -35,6 +35,7 @@ async def update_player(player_id: int, body: PutPlayer):
     if not exists:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Player Not Found")
 
+    # update players data
     await Player.filter(player_id=player_id).update(**data)
     player = await GetPlayer.from_queryset_single(Player.get(player_id=player_id))
     
