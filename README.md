@@ -38,5 +38,7 @@ data model discussion
 ## Thought Process
 At first, I was thinking directly let Player be included under Session, after the implementation, I don't think it has great extensibility because the generally game flow will be players create their own characters and names, and enter the session they want. If I directly created players under the Session data model, it wouldn't feasible. This cost me some time to think and straight out my mind.   
 
+## Testing
+testing is really important, sometime I would forget to check some edge condition, through the testing I will easy to detect. Detected logic errors would be pretty striaghtforward  
 
 ## Result
