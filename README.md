@@ -7,7 +7,7 @@ Steps to start script and see the mock games: <br>
 2. run `uvicorn main:app --reload` (this generate the database)
 3. run `python3 main.py --create`
 4. run `python3 main.py --script`
-You should see the results of 4 mock session games, including top 3 players based on score and freq. (attached pic in the end)
+You should see the results of 4 mock session games, including top 3 players based on score and freq. 
 
 For testing: 
 run: 
@@ -22,7 +22,7 @@ Moreover, if you would like to fetch through localhost, can you do:
 `http://127.0.0.1:8000/api/session` -> []
 `http://127.0.0.1:8000/api/player` -> []
 
-**All results attached in the end of READMe**
+**All results attached in the end of README**
 
 ## Thought Process
 At first, I was thinking directly let `Player` data model be included under `Session ` data model, after thinking about it, I don't think it has great extensibility because the generally game flow will be creating sessions, and players create their own characters and names, and enter the session they want at beginning. If I directly created players under the Session data model, it wouldn't feasible. This cost me some time to think. 
@@ -47,18 +47,18 @@ session will deny 3rd player to enter the game
 
 ## Data Model
 
-Session:
-  session_id: int
-  board: board
-  active: bool
-  players: Player (ReverseRelation)
+Session:</br>
+  session_id: int</br>
+  board: board</br>
+  active: bool</br>
+  players: Player (ReverseRelation)</br>
 
-Player: 
-  player_id: int
-  name: str
-  score: int
-  steps: int
-  session: Session (ForeignKeyRelation)
+Player: </br>
+  player_id: int</br>
+  name: str</br>
+  score: int</br>
+  steps: int</br>
+  session: Session (ForeignKeyRelation)</br>
 
   
 
