@@ -1,9 +1,9 @@
 # Game
 
 
-TLDR
-Steps to start script and see the mock games:
-1. delete game.db, game.db-shm, and game.db-wal to start from fresh (current project is for completion)
+## TLDR </br>
+Steps to start script and see the mock games: <br>
+1. delete `game.db`, `game.db-shm`, and `game.db-wal` to start from fresh
 2. run `uvicorn main:app --reload` (this generate the database)
 3. run `python3 main.py --create`
 4. run `python3 main.py --script`
