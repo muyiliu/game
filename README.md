@@ -4,7 +4,7 @@
 TLDR
 Steps to start script:
 1. delete game.db, game.db-shm, and game.db-wal to start from fresh (current project is for completion)
-2. run **uvicorn main:app --reload** (this generate the database)
+2. run `uvicorn main:app --reload` (this generate the database)
 3. run **python3 main.py --create**
 4. run **python3 main.py --script**
 
@@ -14,7 +14,9 @@ You should see the results of 4 mock session games, including top 3 players base
 Moreover, if you would like to fetch through localhost, can you do:
 1. run **uvicorn main:app --reload**
 2. run your localhost (http://127.0.0.1:8000/) on postman or browser
-
+# # uvicorn main:app --reload
+# # http://127.0.0.1:8000/api/session -> []
+# # http://127.0.0.1:8000/api/player -> []
 
 ## Flow
 
