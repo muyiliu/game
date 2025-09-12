@@ -13,4 +13,5 @@ class Session(Model):
     session_id = IntField(pk=True)
     board=JSONField(null=True, default=default_board)
     players=ReverseRelation["Player"]
+    active=BooleanField(default=False)
 

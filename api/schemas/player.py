@@ -1,10 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from tortoise.contrib.pydantic import pydantic_model_creator
 from api.models.player import Player
-from api.models.session import Session
-# from api.schemas.session import PostSession
-        
 GetPlayer = pydantic_model_creator(Player, name="player")
 
 

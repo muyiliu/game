@@ -20,12 +20,13 @@ PlayerList = Annotated[list[PostPlayer], Field(min_length=1, max_length=2)]
 class PostSession(BaseModel):
     session_id: int
     board: BoardType
+    active:bool
 
 
 class PutSession(BaseModel):
-    board: Optional[BoardType]
+    board: Optional[BoardType]=None
     players: Optional[PlayerList]=None
-
+    active: bool
 
 class Move(BaseModel):
     player_id:int
